@@ -8,8 +8,9 @@ import (
 func TestEnqueue(t *testing.T) {
 	ack := make(chan bool, 4)
 
-	q := NewQueue(func(msg Msg) {
+	q := NewQueue(func(msg Msg) error {
 		ack <- true
+		return nil
 	})
 
 	q.EnQueue(NewTextMsg("m1"))
@@ -37,8 +38,9 @@ func TestEnqueue(t *testing.T) {
 func TestPauseResume(t *testing.T) {
 	ack := make(chan bool, 4)
 
-	q := NewQueue(func(msg Msg) {
+	q := NewQueue(func(msg Msg) error {
 		ack <- true
+		return nil
 	})
 
 	q.EnQueue(NewTextMsg("m1"))
@@ -80,8 +82,9 @@ func TestPauseResume(t *testing.T) {
 func BenchmarkQueue(b *testing.B) {
 	count := 0
 
-	q := NewQueue(func(msg Msg) {
+	q := NewQueue(func(msg Msg) error {
 		count = count + 1
+		return nil
 	})
 
 	msg := NewTextMsg("bla")

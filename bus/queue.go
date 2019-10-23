@@ -1,37 +1,33 @@
 package bus
 
-import (
-	"sync"
-)
-
 // Queue represents a in memory queue of messages
 //
 type Queue interface {
 	EnQueue(msg Msg)
 	Pause()
+	IsPaused() bool
 	Resume()
 }
 
 type queue struct {
-	mutex    *sync.Mutex
-	messages chan Msg
-	buffer   chan<- Msg
-	paused   bool
-	pause    chan bool
-	resume   chan bool
-	handler  func(Msg)
+	messages  chan Msg
+	buffer    chan<- Msg
+	failedMsg Msg
+	paused    bool
+	pause     chan bool
+	resume    chan bool
+	handler   func(Msg) error
 }
 
 // NewQueue creates a new queue
 //
-func NewQueue(handler func(Msg)) Queue {
+func NewQueue(handler func(Msg) error) Queue {
 	in := make(chan Msg)
 	q := &queue{
-		mutex:    &sync.Mutex{},
 		messages: in,
 		buffer:   NewBufferedMsgChannel(in, NewLLBuffer()),
-		pause:    make(chan bool),
-		resume:   make(chan bool),
+		pause:    make(chan bool, 2),
+		resume:   make(chan bool, 2),
 		handler:  handler}
 
 	go q.handle()
@@ -39,9 +35,17 @@ func NewQueue(handler func(Msg)) Queue {
 	return q
 }
 
+func (queue *queue) fail(msg Msg) {
+
+	queue.failedMsg = msg
+	queue.Pause()
+}
+
+func (queue *queue) IsPaused() bool {
+	return queue.paused
+}
+
 func (queue *queue) Pause() {
-	queue.mutex.Lock()
-	defer queue.mutex.Unlock()
 
 	if queue.paused {
 		return
@@ -52,14 +56,17 @@ func (queue *queue) Pause() {
 }
 
 func (queue *queue) Resume() {
-	queue.mutex.Lock()
-	defer queue.mutex.Unlock()
+
+	if queue.failedMsg != nil {
+		queue.handleMsg(queue.failedMsg)
+	}
 
 	if !queue.paused {
 		return
 	}
 
 	queue.resume <- true
+
 	queue.paused = false
 }
 
@@ -72,13 +79,19 @@ func (queue *queue) waitForResume() {
 	}
 }
 
+func (queue *queue) handleMsg(msg Msg) {
+	if err := queue.handler(msg); err != nil {
+		queue.fail(msg)
+	}
+}
+
 func (queue *queue) handle() {
 	for {
 		select {
 		case <-queue.pause:
 			queue.waitForResume()
 		case m := <-queue.messages:
-			queue.handler(m)
+			queue.handleMsg(m)
 		}
 	}
 }

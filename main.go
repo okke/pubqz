@@ -81,8 +81,9 @@ func (server *server) handleConnection(c net.Conn) {
 			} else {
 				client := strings.TrimSpace(netSplitted[1])
 				channel := strings.TrimSpace(netSplitted[2])
-				server.bus.Sub(client, channel, func(msg bus.Msg) {
-					c.Write([]byte(string(fmt.Sprintf("DATA %s\n", string(msg.Data())))))
+				server.bus.Sub(client, channel, func(msg bus.Msg) error {
+					_, err := c.Write([]byte(string(fmt.Sprintf("DATA %s\n", string(msg.Data())))))
+					return err
 				})
 			}
 		}

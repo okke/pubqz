@@ -1,4 +1,4 @@
-package bus
+package pubqz
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ type clientHandler struct {
 }
 
 func newClientHandler(name string) *clientHandler {
-	return &clientHandler{name: name, handlers: make([]func(Msg) error,0)}
+	return &clientHandler{name: name, handlers: make([]func(Msg) error, 0)}
 }
 
 func (clientHandler *clientHandler) handle(msg Msg) error {

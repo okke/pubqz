@@ -1,4 +1,4 @@
-package bus
+package pubqz
 
 // Msg represents a message containing data
 //

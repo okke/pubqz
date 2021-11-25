@@ -3,11 +3,11 @@
 ## simple example
 
 ```go
-buzz := bus.New()
+buzz := pubqz.New()
 
-buzz.Sub("client_id", "channel_id", func(msg Msg) error {
+buzz.Sub("client_id", "channel_id", func(msg pubqz.Msg) error {
     // do something
 })
 
-buzz.Pub("channel_id", bus.NewTextMsg("howdy"))
+buzz.Pub("channel_id", pubqz.NewTextMsg("howdy"))
 ```

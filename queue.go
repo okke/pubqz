@@ -1,4 +1,4 @@
-package bus
+package pubqz
 
 // Queue represents a in memory queue of messages
 //

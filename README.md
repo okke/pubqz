@@ -1,4 +1,4 @@
-# PUBQZ, a simple embedded pub/sub queing library
+# PUBQZ, a simple embedded pub/sub library fo go
 
 ## simple example
 

@@ -23,13 +23,14 @@ func TestEnqueue(t *testing.T) {
 
 	// should get four acks
 	//
+exit:
 	for i := 0; i < 4; i++ {
 		select {
 		case <-ack:
 			// ignore
 		case <-time.After(3 * time.Second):
 			t.Error("reading messages took too long")
-			break
+			break exit
 		}
 	}
 
@@ -67,13 +68,14 @@ func TestPauseResume(t *testing.T) {
 
 	// should get four acks
 	//
+exit:
 	for i := 0; i < 4; i++ {
 		select {
 		case <-ack:
 			// ignore
 		case <-time.After(3 * time.Second):
 			t.Error("reading messages took too long")
-			break
+			break exit
 		}
 	}
 

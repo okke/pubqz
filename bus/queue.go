@@ -72,8 +72,7 @@ func (queue *queue) Resume() {
 
 func (queue *queue) waitForResume() {
 	for {
-		select {
-		case <-queue.resume:
+		if <-queue.resume {
 			return
 		}
 	}

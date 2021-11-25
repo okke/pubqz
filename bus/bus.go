@@ -20,7 +20,7 @@ type clientHandler struct {
 }
 
 func newClientHandler(name string) *clientHandler {
-	return &clientHandler{name: name, handlers: make([]func(Msg) error, 0, 0)}
+	return &clientHandler{name: name, handlers: make([]func(Msg) error,0)}
 }
 
 func (clientHandler *clientHandler) handle(msg Msg) error {
@@ -77,7 +77,7 @@ type bus struct {
 func New() Bus {
 	return &bus{
 		mutex:    &sync.Mutex{},
-		channels: make(map[string]*msgChannel, 0)}
+		channels: make(map[string]*msgChannel)}
 }
 
 func (bus *bus) getChannel(channel string) *msgChannel {
@@ -85,7 +85,7 @@ func (bus *bus) getChannel(channel string) *msgChannel {
 	if !found {
 		ch = &msgChannel{
 			in:       NewQueue(bus.handlerFor(channel)),
-			out:      make(map[string]Queue, 0),
+			out:      make(map[string]Queue),
 			handlers: make(map[string]*clientHandler)}
 		bus.channels[channel] = ch
 	}

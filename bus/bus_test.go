@@ -25,8 +25,8 @@ func TestSimplePubSub(t *testing.T) {
 
 	b := New()
 
-	c1 := make(map[string]bool, 0)
-	c2 := make(map[string]bool, 0)
+	c1 := make(map[string]bool)
+	c2 := make(map[string]bool)
 
 	ack := make(chan bool, 4)
 
@@ -68,8 +68,8 @@ func TestPubSubWithMultiClients(t *testing.T) {
 
 	b := New()
 
-	h1 := make(map[string]bool, 0)
-	h2 := make(map[string]bool, 0)
+	h1 := make(map[string]bool)
+	h2 := make(map[string]bool)
 
 	ack := make(chan bool, 2)
 
@@ -121,8 +121,8 @@ func TestPubSubWithFailingClient(t *testing.T) {
 
 	b := New()
 
-	h1 := make(map[string]bool, 0)
-	h3 := make(map[string]bool, 0)
+	h1 := make(map[string]bool)
+	h3 := make(map[string]bool)
 
 	ack := make(chan bool, 2)
 

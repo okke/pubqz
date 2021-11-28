@@ -16,6 +16,10 @@ func NewTextMsg(data string) Msg {
 	return &msg{data: []byte(data)}
 }
 
+func NewMsg(data []byte) Msg {
+	return &msg{data: data}
+}
+
 func (msg *msg) Data() []byte {
 	return msg.data
 }

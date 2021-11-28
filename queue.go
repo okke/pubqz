@@ -12,7 +12,7 @@ type Queue interface {
 type queue struct {
 	messages  chan Msg
 	buffer    chan<- Msg
-	failedMsg Msg
+	failedMsg []Msg
 	paused    bool
 	pause     chan bool
 	resume    chan bool
@@ -24,11 +24,12 @@ type queue struct {
 func NewQueue(handler func(Msg) error) Queue {
 	in := make(chan Msg)
 	q := &queue{
-		messages: in,
-		buffer:   NewBufferedMsgChannel(in, NewLLBuffer()),
-		pause:    make(chan bool, 2),
-		resume:   make(chan bool, 2),
-		handler:  handler}
+		messages:  in,
+		buffer:    NewBufferedMsgChannel(in, NewLLBuffer()),
+		failedMsg: []Msg{},
+		pause:     make(chan bool, 2),
+		resume:    make(chan bool, 2),
+		handler:   handler}
 
 	go q.handle()
 
@@ -37,7 +38,7 @@ func NewQueue(handler func(Msg) error) Queue {
 
 func (queue *queue) fail(msg Msg) {
 
-	queue.failedMsg = msg
+	queue.failedMsg = append(queue.failedMsg, msg)
 	queue.Pause()
 }
 
@@ -58,7 +59,11 @@ func (queue *queue) Pause() {
 func (queue *queue) Resume() {
 
 	if queue.failedMsg != nil {
-		queue.handleMsg(queue.failedMsg)
+
+		for _, msg := range queue.failedMsg {
+			queue.handleMsg(msg)
+		}
+		queue.failedMsg = []Msg{}
 	}
 
 	if !queue.paused {

@@ -6,15 +6,15 @@ import (
 	"time"
 )
 
-func expectsNrOfAcks(t *testing.T, nr int, ack chan bool) {
+func expectsNrOfAcks(t *testing.T, nr int, ack chan bool, fail func(err error)) {
 	got := 0
 	for i := 0; i < nr; i++ {
 		select {
 		case <-ack:
 			got = got + 1
 			// ignore
-		case <-time.After(1 * time.Second):
-			t.Error("expected", nr, "acks but only got", got)
+		case <-time.After(3 * time.Second):
+			fail(fmt.Errorf("expected %d acks but only got %d", nr, got))
 		}
 	}
 
@@ -47,7 +47,7 @@ func TestSimplePubSub(t *testing.T) {
 
 	// should get four acks
 	//
-	expectsNrOfAcks(t, 4, ack)
+	expectsNrOfAcks(t, 4, ack, func(err error) { t.Error(err) })
 
 	if _, f := c1["chipotle"]; !f {
 		t.Error("c1 did not receive chipotle")
@@ -103,7 +103,7 @@ func TestPubSubWithMultiClients(t *testing.T) {
 
 	// should get 3 acks
 	//
-	expectsNrOfAcks(t, 3, ack)
+	expectsNrOfAcks(t, 3, ack, func(err error) { t.Error(err) })
 
 	if _, f := h1["chipotle"]; !f {
 		t.Error("h1 did not receive chipotle")
@@ -124,12 +124,12 @@ func TestPubSubWithFailingClient(t *testing.T) {
 	h1 := make(map[string]bool)
 	h3 := make(map[string]bool)
 
-	ack := make(chan bool, 2)
+	ack := make(chan bool, 4)
 
 	b.Sub("c1", "test", func(msg Msg) error {
-		t.Log("c1 receives in h1", string(msg.Data()))
 		h1[string(msg.Data())] = true
 		ack <- true
+		t.Log("c1 receives in h1", string(msg.Data()))
 		return nil
 	})
 
@@ -138,9 +138,9 @@ func TestPubSubWithFailingClient(t *testing.T) {
 	})
 
 	b.Sub("c1", "test", func(msg Msg) error {
-		t.Log("c1 receives in h3", string(msg.Data()))
 		h3[string(msg.Data())] = true
 		ack <- true
+		t.Log("c1 receives in h3", string(msg.Data()))
 		return nil
 	})
 
@@ -149,9 +149,9 @@ func TestPubSubWithFailingClient(t *testing.T) {
 	b.Pub("test", NewTextMsg("habanero"))
 	b.Pub("test", NewTextMsg("tabasco"))
 
-	// should get 3 acks
+	// should get 4 acks
 	//
-	expectsNrOfAcks(t, 3, ack)
+	expectsNrOfAcks(t, 4, ack, func(err error) { t.Error(err) })
 
 	if _, f := h1["chipotle"]; !f {
 		t.Error("h1 did not receive chipotle")
@@ -197,11 +197,12 @@ func TestPubSubWithOnlyFailingClients(t *testing.T) {
 
 	b.Sub("c1", "test", func(msg Msg) error {
 		ack <- true
+		t.Log("handled", string(msg.Data()))
 		return nil
 	})
 
 	// and expect 4 acks for new handler
 	//
-	expectsNrOfAcks(t, 4, ack)
+	expectsNrOfAcks(t, 4, ack, func(err error) { t.Error(err) })
 
 }
